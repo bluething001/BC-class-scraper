@@ -11,17 +11,7 @@ USERNAME = "guoale"
 PASSWORD = "j2dhdgt7"
 
 def main():
-    for class_name, section in classes:
-        print(f"Checking availability for {class_name}, Section {section}...")
-        filled, seats = selenium_crawler.scrape_class(class_name, section, USERNAME, PASSWORD)
-        
-        # Add logic to send an email if seats are available
-        if seats is not None and filled is not None and seats > filled:
-            print(f"Seats available for {class_name}, Section {section}!")
-            email_sender.send_email(filled, seats, class_name, section)
-        else:
-            print(f"Seats for class {class_name}, section {section} are full")
-        print()
+    selenium_crawler.scrape_class(USERNAME, PASSWORD, classes)
         
 
 if __name__ == "__main__":

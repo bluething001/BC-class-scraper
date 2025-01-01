@@ -15,7 +15,7 @@ from selenium.webdriver.common.keys import Keys
 def random_sleep_time():
     return random.random()
 
-def scrape_class(class_name, section, username, password):
+def scrape_class(username, password, classes):
     chromeDriverPath = "/opt/homebrew/bin/chromedriver"
 
     options = Options()
@@ -59,11 +59,29 @@ def scrape_class(class_name, section, username, password):
         time.sleep(random_sleep_time() + 3)
         tab_element.click()
 
-        #currently in courses, nothing searched yet
-        elements = class_seats.find_availability(class_name, section, driver, wait)
-        elements = elements.split(' ')
-        del elements[1]
-        return elements
+        for class_name, section in classes:
+            print(f"Checking availability for {class_name}, Section {section}...")
+            elements = class_seats.find_availability(class_name, section, driver, wait)
+            elements = elements.split(' ')
+            del elements[1]
+            filled = int(elements[0])
+            seats = int(elements[1])
+            # Add logic to send an email if seats are available
+            if seats is not None and filled is not None and seats > filled:
+                print(f"Seats available for {class_name}, Section {section}!")
+                email_sender.send_email(filled, seats, class_name, section)
+            else:
+                print(f"Seats for class {class_name}, section {section} are full")
+            print()
+            
+            clearfilter = wait.until(
+                EC.element_to_be_clickable((By.ID, "seFacetedFiltersViewerClearAllFilters"))
+            )
+            time.sleep(random_sleep_time())
+            clearfilter.click()
+            time.sleep(random_sleep_time + 1)
+
+            
 
     except Exception as e:
         print(f"An error occurred: {e}")
