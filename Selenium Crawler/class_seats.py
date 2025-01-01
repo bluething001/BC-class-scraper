@@ -15,7 +15,7 @@ BASE_AVAILABLE_ID = "courseOfferingSearchCtrl.tableIdRegistered-"
 BASE_FULL_ID = "courseOfferingSearchCtrl.tableIdPopover-"
 
 def random_sleep_time():
-    return random.random()+1
+    return random.random()*5.0 + 3.0
 
 def find_availability(class_name, section, driver, wait):
     keyword_field = wait.until(

@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
 def random_sleep_time():
-    return random.random()
+    return random.random()*5.0 + 3.0
 
 def scrape_class(username, password, classes):
     chromeDriverPath = "/opt/homebrew/bin/chromedriver"
@@ -79,7 +79,7 @@ def scrape_class(username, password, classes):
             )
             time.sleep(random_sleep_time())
             clearfilter.click()
-            time.sleep(random_sleep_time + 1)
+            time.sleep(random_sleep_time() + 1)
 
             
 
