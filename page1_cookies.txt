@@ -1,6 +1,0 @@
-<span id="courseOfferingSearchCtrl.tableIdPopover-00" ng-if="tabularCourseOfferingDisplaySelectorCtrl.showPopover(row)" ng-mouseover="popoverIsOpen = true" ng-mouseleave="popoverIsOpen = false" class="ng-binding ng-scope">
-                              <span uib-popover="Closed" class="cursor-help ng-binding" popover-trigger="outsideClick" popover-is-open="popoverIsOpen" popover-class="popover" popover-append-to-body="true" type="button">
-                                  <!-- ngIf: tabularCourseOfferingDisplaySelectorCtrl.isClosed(row) --><i ng-if="tabularCourseOfferingDisplaySelectorCtrl.isClosed(row)" class="glyphicon glyphicon-ban-circle ng-scope"></i><!-- end ngIf: tabularCourseOfferingDisplaySelectorCtrl.isClosed(row) -->
-                              </span>
-                              39 of 38
-                          </span>

@@ -24,12 +24,11 @@ def find_availability(class_name, section, driver, wait):
     time.sleep(random_sleep_time())
     keyword_field.send_keys(class_name)
     keyword_field.send_keys(Keys.RETURN)
-
+    time.sleep(4 + random_sleep_time())
     # hit dropdown
     dropdown_icon = wait.until(
         EC.element_to_be_clickable((By.CSS_SELECTOR, "i.pull-right.glyphicon.glyphicon-chevron-right"))
     )
-    time.sleep(2 + random_sleep_time())
     dropdown_icon.click()
     time.sleep(random_sleep_time())
 

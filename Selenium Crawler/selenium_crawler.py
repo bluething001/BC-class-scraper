@@ -15,50 +15,8 @@ from selenium.webdriver.common.keys import Keys
 def random_sleep_time():
     return random.random()*5.0 + 3.0
 
-def scrape_class(username, password, classes):
-    chromeDriverPath = "/opt/homebrew/bin/chromedriver"
-
-    options = Options()
-    
-    service = Service(chromeDriverPath)
-
-    driver = webdriver.Chrome(service=service, options=options)
-
-    wait = WebDriverWait(driver, 20)  # 20 seconds timeout
-
+def scrape_class(username, password, classes, driver, wait):
     try:
-        url = "https://portal.bc.edu"
-        driver.get(url)
-
-        username_field = wait.until(
-            EC.visibility_of_element_located((By.ID, "username"))
-        )
-        time.sleep(random_sleep_time())
-        username_field.send_keys(username)
-
-        password_field = wait.until(
-            EC.visibility_of_element_located((By.ID, "password"))
-        )
-        time.sleep(random_sleep_time())
-        password_field.send_keys(password)
-
-        login_button = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//button[text()='Sign in']"))
-        )
-        time.sleep(random_sleep_time())
-        login_button.click()
-
-        wait.until(EC.url_contains("myservices.do"))
-        final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
-        time.sleep(random_sleep_time())
-        driver.get(final_url)
-
-        tab_element = wait.until(
-            EC.element_to_be_clickable((By.ID, "mySchedule"))
-        )
-        time.sleep(random_sleep_time() + 3)
-        tab_element.click()
-
         for class_name, section in classes:
             print(f"Checking availability for {class_name}, Section {section}...")
             elements = class_seats.find_availability(class_name, section, driver, wait)
@@ -84,7 +42,11 @@ def scrape_class(username, password, classes):
             
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-
-    finally:
-        driver.quit()
+        try: 
+            clearfilter = wait.until(
+                EC.element_to_be_clickable((By.ID, "seFacetedFiltersViewerClearAllFilters"))
+            )
+            time.sleep(random_sleep_time())
+            clearfilter.click()
+        except Exception as e:
+            print(f"An error occurred: {e}")
