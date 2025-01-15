@@ -1,4 +1,5 @@
 import os
+import login
 import time
 import re
 import email_sender
@@ -13,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
 def random_sleep_time():
-    return random.random()*5.0 + 3.0
+    return random.random()*1.0 + 2.0
 
 def scrape_class(username, password, classes, driver, wait):
     try:
@@ -49,4 +50,7 @@ def scrape_class(username, password, classes, driver, wait):
             time.sleep(random_sleep_time())
             clearfilter.click()
         except Exception as e:
-            print(f"An error occurred: {e}")
+            try:
+                login.loginer(username, password, driver, wait)
+            except Exception as e:
+                print(f"An error occurred: {e}")

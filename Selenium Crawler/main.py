@@ -1,4 +1,5 @@
 import selenium_crawler  # Import the refactored scraper
+import login
 import tkinter as tk
 from tkinter import messagebox
 import threading
@@ -16,7 +17,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import StaleElementReferenceException
 
 
-
 # Define the file to save classes
 CLASSES_FILE = "classes.json"
 
@@ -24,7 +24,7 @@ CLASSES_FILE = "classes.json"
 stop_thread = False
 
 def random_sleep_time():
-    return random.random() * 10.0 + 3.0
+    return random.random() * 1.0 + 2.0
 
 def load_classes():
     """Load classes from a JSON file."""
@@ -41,57 +41,23 @@ def save_classes():
 def run_scraper(username, password):
     global stop_thread
 
-    chromeDriverPath = "/opt/homebrew/bin/chromedriver"
+    chromeDriverPath = os.environ.get("CHROMEDRIVER")
 
     options = Options()
-    
+
     service = Service(chromeDriverPath)
 
     driver = webdriver.Chrome(service=service, options=options)
 
     wait = WebDriverWait(driver, 30)
 
-    url = "https://portal.bc.edu"
-    driver.get(url)
-
-    username_field = wait.until(
-        EC.visibility_of_element_located((By.ID, "username"))
-    )
-    time.sleep(random_sleep_time())
-    username_field.send_keys(username)
-
-    password_field = wait.until(
-        EC.visibility_of_element_located((By.ID, "password"))
-    )
-    time.sleep(random_sleep_time())
-    password_field.send_keys(password)
-
-    login_button = wait.until(
-        EC.element_to_be_clickable((By.XPATH, "//button[text()='Sign in']"))
-    )
-    time.sleep(random_sleep_time())
-    login_button.click()
-
-    wait.until(EC.url_contains("myservices.do"))
-    final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
-    time.sleep(random_sleep_time())
-    driver.get(final_url)
-
-    while True:
-        try:
-            tab_element = wait.until(
-                EC.element_to_be_clickable((By.ID, "mySchedule"))
-            )
-            tab_element.click()
-            time.sleep(1)
-            tab_element.click()
-            break  # Exit loop if successful
-        except StaleElementReferenceException:
-            print("Element went stale, retrying...")
+    
 
     # time.sleep(50)
     iteration = 1
     while not stop_thread:
+        if iteration%10 == 1:
+            login.loginer(username, password, driver, wait)
         print(f"Iteration #{iteration}")
         iteration += 1
         selenium_crawler.scrape_class(username, password, classes, driver, wait)
