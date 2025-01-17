@@ -1,5 +1,5 @@
-import selenium_crawler  # Import the refactored scraper
 import login
+import api_helper
 import tkinter as tk
 from tkinter import messagebox
 import threading
@@ -46,22 +46,24 @@ def run_scraper(username, password):
     options = Options()
 
     service = Service(chromeDriverPath)
-
     driver = webdriver.Chrome(service=service, options=options)
-
     wait = WebDriverWait(driver, 30)
-
-    
-
+    login.loginer(username, password, driver, wait)
     # time.sleep(50)
     iteration = 1
     while not stop_thread:
-        if iteration%10 == 1:
+        if iteration%10 == 0:
+            print("refreshing...")
+            driver.quit()
+            driver = webdriver.Chrome(service=service, options=options)
+            wait = WebDriverWait(driver, 30)
             login.loginer(username, password, driver, wait)
         print(f"Iteration #{iteration}")
         iteration += 1
-        selenium_crawler.scrape_class(username, password, classes, driver, wait)
-        time.sleep(random_sleep_time())
+        api_helper.scrape_class(classes, driver, wait)
+        save_classes()
+        populate_class()
+        time.sleep(random_sleep_time()+150)
     driver.quit()
     print("Scraper stopped.")
 
@@ -102,28 +104,20 @@ def stop_scraper():
     print("Stopping the scraper...")
 
 def add_class():
-    class_name = class_name_entry.get().strip()
-    section = section_entry.get().strip()
+    apiKey = apiKey_entry.get().strip()
 
-    if not class_name or not section:
-        messagebox.showerror("Error", "Please enter both class name and section.")
+    if not apiKey:
+        messagebox.showerror("Error", "Please enter an api key")
         return
 
-    try:
-        section = int(section)
-    except ValueError:
-        messagebox.showerror("Error", "Section must be a number.")
-        return
-
-    classes.append((class_name, section))
-    class_listbox.insert(tk.END, f"{class_name} (Section {section})")
+    classes.append(("to be updated...", apiKey))
+    class_listbox.insert(tk.END, f"to be updated...   API Key: {apiKey}")
 
     # Save the updated classes list
     save_classes()
 
     # Clear input fields
-    class_name_entry.delete(0, tk.END)
-    section_entry.delete(0, tk.END)
+    apiKey_entry.delete(0, tk.END)
 
 def remove_selected_class():
     selected_index = class_listbox.curselection()
@@ -138,6 +132,10 @@ def remove_selected_class():
     # Save the updated classes list
     save_classes()
 
+def populate_class():
+    class_listbox.delete(0, tk.END)
+    for class_name, section in classes:
+        class_listbox.insert(tk.END, f"{class_name}")
 # Load classes from the file
 classes = load_classes()
 
@@ -157,15 +155,10 @@ password_label.pack(pady=5)
 password_entry = tk.Entry(window, show="*", width=30)
 password_entry.pack(pady=5)
 
-class_name_label = tk.Label(window, text="Class Name:")
-class_name_label.pack(pady=5)
-class_name_entry = tk.Entry(window, width=30)
-class_name_entry.pack(pady=5)
-
-section_label = tk.Label(window, text="Section:")
-section_label.pack(pady=5)
-section_entry = tk.Entry(window, width=30)
-section_entry.pack(pady=5)
+apiKey_label = tk.Label(window, text="API Key:")
+apiKey_label.pack(pady=5)
+apiKey_entry = tk.Entry(window, width=30)
+apiKey_entry.pack(pady=5)
 
 add_class_button = tk.Button(window, text="Add Class", command=add_class)
 add_class_button.pack(pady=5)
@@ -175,8 +168,8 @@ class_listbox = tk.Listbox(window, width=50, height=10)
 class_listbox.pack(pady=5)
 
 # Populate the listbox with saved classes
-for class_name, section in classes:
-    class_listbox.insert(tk.END, f"{class_name} (Section {section})")
+populate_class()
+
 
 # Remove selected class button
 remove_class_button = tk.Button(window, text="Remove Selected Class", command=remove_selected_class)
