@@ -14,28 +14,29 @@ def fast_random_sleep_time():
 def loginer(username, password, driver, wait):
     url = "https://portal.bc.edu"
     driver.get(url)
-    time.sleep(fast_random_sleep_time())
+    # time.sleep(fast_random_sleep_time())
     username_field = wait.until(
         EC.visibility_of_element_located((By.ID, "username"))
     )
     username_field.send_keys(username)
 
-    time.sleep(fast_random_sleep_time())
+    # time.sleep(fast_random_sleep_time())
     password_field = wait.until(
         EC.visibility_of_element_located((By.ID, "password"))
     )
     password_field.send_keys(password)
 
-    time.sleep(fast_random_sleep_time())
+    # time.sleep(fast_random_sleep_time())
     login_button = wait.until(
         EC.element_to_be_clickable((By.XPATH, "//button[text()='Sign in']"))
     )
     login_button.click()
 
-    time.sleep(fast_random_sleep_time())
+    # time.sleep(fast_random_sleep_time())
     wait.until(EC.url_contains("myservices.do"))
     final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
     driver.get(final_url)
+    
     time.sleep(slow_random_sleep_time())
     while True:
         try:
