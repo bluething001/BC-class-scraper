@@ -39,9 +39,9 @@ def extract_scheduleid_from_url(url):
     query_params = parse_qs(parsed_url.query)  # Parse the query parameters
     return query_params.get("scheduleIds", [None])[0]  # Get the first value or None
 
-def check_availability(driver, classid):
+def check_availability(driver, classid, username):
     params = {
-        "principalId": "guoale",
+        "principalId": username,
         "activityOfferingId": classid,
         "context.applicationId": "angular1x.student-registration",
         "context.moduleId": "en",
@@ -58,9 +58,9 @@ def check_availability(driver, classid):
             
     return grabbed_name, available_seats
 
-def check_schedule(driver, classid):
+def check_schedule(driver, classid, username):
     params = {
-        "principalId": "guoale",
+        "principalId": username,
         "context.applicationId": "angular1x.student-registration",
         "context.moduleId": "en",
         "context.screenId": "student-registration.",
@@ -78,10 +78,9 @@ def check_schedule(driver, classid):
 
     return place_time
 
-def get_info(driver, courseOfferingId, section):
+def get_info(driver, courseOfferingId, section, username):
     params = {
-        # CHANGE GUOALE TO INPUTTED USERNAME
-        "principalId": "guoale",
+        "principalId": username,
         "context.applicationId": "angular1x.student-registration",
         "context.moduleId": "en",
         "context.screenId": "student-registration.",
@@ -98,15 +97,15 @@ def get_info(driver, courseOfferingId, section):
     instructors = specific_class.get("instructors", [])
     schedule_ids = specific_class.get("scheduleIds", [])
 
-    class_name, available_seats = check_availability(driver, class_id)
+    class_name, available_seats = check_availability(driver, class_id, username)
     schedule = []
     for times in schedule_ids:
-        schedule.append(check_schedule(driver, times))
+        schedule.append(check_schedule(driver, times, username))
     # Extract the personName of all instructors (if there are multiple)
     instructor_names = [instructor.get("personName") for instructor in instructors]
     return class_name, available_seats, instructor_names, schedule
 
-def get_logs(driver, section):
+def get_logs(driver, section, username):
     logs = driver.get_log("performance")
     for log in logs:
         try:
@@ -124,7 +123,7 @@ def get_logs(driver, section):
                     courseOfferingId = extract_courseOffering_from_url(request_url).strip()
                     print(courseOfferingId)
                     print()
-                    classinfo = get_info(driver, courseOfferingId, section)
+                    classinfo = get_info(driver, courseOfferingId, section, username)
                     return classinfo
                     # activity_ids.append(courseOfferingId)
         except Exception as e:
@@ -163,6 +162,7 @@ def get_all_info(username, password, classInfo):
     time.sleep(random_sleep_time())
 
     # Get activity offering IDs
-    all_class_info = get_logs(driver, classInfo[1])
+    all_class_info = get_logs(driver, classInfo[1], username)
     driver.quit()
+    print(all_class_info)
     return all_class_info

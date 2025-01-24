@@ -13,39 +13,49 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+import class_id_grabber
 
-def random_sleep_time():
-    return random.random() * 1.0 + 2.0
+app = FastAPI()
 
-classInfo = ["PHYS2201 Introductory Physics II (Calculus)", 1]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace "*" with the specific frontend URL for security, e.g., ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
-# def run_scraper(username, password):
+# Define input model
+class ClassRequest(BaseModel):
+    username: str
+    password: str
+    class_name: str
+    section: int
 
-#     chromeDriverPath = "/opt/homebrew/bin/chromedriver"
+@app.post("/get_class_data/")
+async def get_class_data(request: ClassRequest):
+    try:
+        # Prepare classInfo for get_all_info
+        classInfo = [request.class_name, request.section]
+        # Call the existing function
+        classdata = class_id_grabber.get_all_info(request.username, request.password, classInfo)
+        classdata_dict = {
+            "class_name": classdata[0],
+            "available_seats": classdata[1],
+            "instructors": classdata[2],
+            "schedule": classdata[3],
+        }
+        return {"classdata": classdata_dict}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# def random_sleep_time():
+#     return random.random() * 1.0 + 2.0
 
-#     options = Options()
+# classInfo = ["PHYS2201 Introductory Physics II (Calculus)", 1]
 
-#     service = Service(chromeDriverPath)
-#     driver = webdriver.Chrome(service=service, options=options)
-#     wait = WebDriverWait(driver, 30)
-#     login.loginer(username, password, driver, wait)
-#     # time.sleep(50)
-#     iteration = 1
-#     while True:
-#         if iteration%10 == 0:
-#             print("REFRESHING...")
-#             driver.quit()
-#             time.sleep(random_sleep_time())
-#             driver = webdriver.Chrome(service=service, options=options)
-#             wait = WebDriverWait(driver, 30)
-#             login.loginer(username, password, driver, wait)
-
-#         print(f"Iteration #{iteration}")
-#         iteration += 1
-#         api_requester.scrape_class(classes, driver, wait)
-#         time.sleep(random_sleep_time()+150)
-#     driver.quit()
-#     print("Scraper stopped.")
-
-classdata = class_id_grabber.get_all_info("guoale", "j2dhdgt7", classInfo)
-print(classdata)
+# classdata = class_id_grabber.get_all_info("guoale", "j2dhdgt7", classInfo)
+# print(classdata)
