@@ -11,7 +11,8 @@ from selenium.webdriver.common.keys import Keys
 import time
 import random
 from urllib.parse import urlparse, parse_qs
-
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
 
 CLASS_API_URL = "https://eaen.bc.edu/en-services/services/rest/oauth/activityseatcountservice/activityseatcounts"
 SCHEDULE_API_URL = "https://eaen.bc.edu/en-services/services/rest/oauth/schedulingservice/scheduledisplays"
@@ -38,6 +39,16 @@ def extract_scheduleid_from_url(url):
     parsed_url = urlparse(url)  # Parse the URL into components
     query_params = parse_qs(parsed_url.query)  # Parse the query parameters
     return query_params.get("scheduleIds", [None])[0]  # Get the first value or None
+
+MAX_RETRIES = 10
+def retry_find_element(driver, by, value, retries=MAX_RETRIES, sleep_time=0.5):
+    for _ in range(retries):
+        try:
+            return driver.find_element(by, value)
+        except NoSuchElementException:
+            time.sleep(sleep_time)
+    raise NoSuchElementException(f"Element not found: {value}")
+
 
 def check_availability(driver, classid, username):
     params = {
@@ -140,26 +151,28 @@ def get_all_info(username, password, classInfo):
     service = Service(chromeDriverPath)
     driver = webdriver.Chrome(service=service, options=options)
 
-    wait = WebDriverWait(driver, 30)
-
     # Log in to the system
-    login.loginer(username, password, driver, wait)
+    login.loginer(username, password, driver)
 
     # Search for the class
-    keyword_field = wait.until(
-        EC.visibility_of_element_located((By.ID, "seFacetedFiltersViewersearchTextForFilters"))
-    )
+    keyword_field = retry_find_element(driver, By.ID, "seFacetedFiltersViewersearchTextForFilters")
     keyword_field.send_keys(classInfo[0])
     keyword_field.send_keys(Keys.RETURN)
 
-    # Expand dropdown
+    #throws exception somewhere here
     clear_logs(driver)
-    dropdown_icon = wait.until(
-        EC.element_to_be_clickable((By.CSS_SELECTOR, "i.pull-right.glyphicon.glyphicon-chevron-right"))
-    )
+
+    time.sleep(random_sleep_time())
+    
+    dropdown_icon = retry_find_element(driver, By.CSS_SELECTOR, "i.pull-right.glyphicon.glyphicon-chevron-right")
+
     time.sleep(2 + random_sleep_time())
     dropdown_icon.click()
     time.sleep(random_sleep_time())
+
+
+    # dropdown_icon = retry_find_element(driver, By.CLASS_NAME, "glyphicon-chevron-right")
+    # dropdown_icon.click()
 
     # Get activity offering IDs
     all_class_info = get_logs(driver, classInfo[1], username)
