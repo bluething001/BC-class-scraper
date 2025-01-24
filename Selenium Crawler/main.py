@@ -1,12 +1,8 @@
-import login
-import api_requester
 import class_id_grabber
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
+import checkRegistration
+from fastapi.responses import JSONResponse
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from concurrent.futures import ThreadPoolExecutor
@@ -31,19 +27,23 @@ class ClassRequest(BaseModel):
     class_name: str
     section: int
 
+class RegisterRequest(BaseModel):
+    createdUsername: str
+    createdPassword: str
+    confirmedPassword: str
+    userEmail: str
+    BCusername: str
+    BCpassword: str
+
 def run_selenium(username, password, classInfo):
     """
     Function to run the Selenium process in a separate thread.
     """
-    try:
-        # Call the existing function
-        return class_id_grabber.get_all_info(username, password, classInfo)
-    except Exception as e:
-        raise RuntimeError(f"Error in Selenium execution: {e}")
+    return class_id_grabber.get_all_info(username, password, classInfo)
 
 @app.post("/get_class_data/")
 async def get_class_data(request: ClassRequest):
-    try:
+    # try:
         # Prepare classInfo for get_all_info
         classInfo = [request.class_name, request.section]
 
@@ -58,5 +58,38 @@ async def get_class_data(request: ClassRequest):
             "schedule": classdata[3],
         }
         return {"classdata": classdata_dict}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/register/")
+async def register(request: RegisterRequest):
+    createdUsername = request.createdUsername
+    createdPassword = request.createdPassword
+    confirmedPassword = request.confirmedPassword
+    userEmail = request.userEmail
+    BCusername = request.BCusername
+    BCpassword = request.BCpassword
+    if (createdPassword != confirmedPassword):
+        return JSONResponse(
+            content={"message": "Passwords don't match"},
+            status_code=400
+        )
+    
+    if (checkRegistration.is_valid_email(userEmail) == False):
+        return JSONResponse(
+            content={"message": "Invalid Email"},
+            status_code=400
+        )
+
+    if (checkRegistration.checkBCLogin(BCusername, BCpassword) == 0):
+        return JSONResponse(
+            content={"message": "Invalid BC Login"},
+            status_code=400
+        )
+
+    
+
+    return JSONResponse(
+        content={"message": "Registration successful"},
+        status_code=200
+    )     
