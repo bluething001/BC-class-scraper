@@ -104,7 +104,7 @@ def get_info(driver, courseOfferingId, section, username):
         schedule.append(check_schedule(driver, times, username))
     # Extract the personName of all instructors (if there are multiple)
     instructor_names = [instructor.get("personName") for instructor in instructors]
-    return class_name, available_seats, instructor_names, schedule
+    return class_name, instructor_names, schedule, class_id
 
 def get_logs(driver, section, username):
     logs = driver.get_log("performance")
@@ -130,7 +130,7 @@ def get_logs(driver, section, username):
         except Exception as e:
             print("Error processing log:", e)
 
-def get_all_info(username, password, classInfo):
+def get_all_info(username, password, className, section):
     chromeDriverPath = "/opt/homebrew/bin/chromedriver"
 
     # Set up Chrome options
@@ -156,20 +156,27 @@ def get_all_info(username, password, classInfo):
         keyword_field = wait.until(
             EC.visibility_of_element_located((By.ID, "seFacetedFiltersViewersearchTextForFilters"))
         )
-        keyword_field.send_keys(classInfo[0])
+        keyword_field.send_keys(className)
         keyword_field.send_keys(Keys.RETURN)
 
         # Expand dropdown
         clear_logs(driver)
-        dropdown_icon = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "i.pull-right.glyphicon.glyphicon-chevron-right"))
-        )
-        time.sleep(2 + random_sleep_time())
-        dropdown_icon.click()
-        time.sleep(random_sleep_time())
+        try:
+            dropdown_icon = wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "i.pull-right.glyphicon.glyphicon-chevron-right"))
+            )
+            time.sleep(2 + random_sleep_time())
+            dropdown_icon.click()
+            time.sleep(random_sleep_time())
+        except Exception as e:
+            raise Exception(f"Class: {className} not found")
 
         # Get activity offering IDs
-        all_class_info = get_logs(driver, classInfo[1], username)
+        all_class_info = get_logs(driver, section, username)
+
+        if not all_class_info:
+            raise Exception(f"Invalid section '{section}' for class '{className}'. Please check the section number.")
+
         return all_class_info
 
     except Exception as e:

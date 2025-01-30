@@ -2,7 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-def send_email(available_seats, class_name):
+def send_email(available_seats, class_name, instructors, schedules):
     # Email Configuration
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 587
@@ -12,7 +12,7 @@ def send_email(available_seats, class_name):
 
     # Email Content
     subject = "Seat Availability Alert"
-    body = f"Seats Available in {class_name}!\n\nAvailable Seats: {available_seats}\nRegister soon!"
+    body = f"Seats Available in {class_name}!\n\nAvailable Seats: {available_seats}\nRegister soon!\n\nClass Details:\nInstructors: {', '.join(instructors)}\nSchedule: {', '.join(schedules)}"
 
     # Create email
     message = MIMEMultipart()

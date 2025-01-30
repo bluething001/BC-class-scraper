@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 API_URL = "https://eaen.bc.edu/en-services/services/rest/oauth/activityseatcountservice/activityseatcounts"
 def random_sleep_time():
     return random.random()*1.0 + 1.0
-def scrape_class(classes, driver, wait):
+def scrape_class(classInfo, driver):
     # class_name = "Topics in this course include vectors in two"
     # keyword_field = wait.until(
     #     EC.visibility_of_element_located((By.ID, "seFacetedFiltersViewersearchTextForFilters"))
@@ -17,11 +17,13 @@ def scrape_class(classes, driver, wait):
     # keyword_field.send_keys(Keys.RETURN)
     # time.sleep(2 + random_sleep_time())
     try:
-        for i, (course_name, classid) in enumerate(classes):
+
+
+        for classname, instructors, schedules, id in classInfo:
             time.sleep(random_sleep_time())
             params = {
                 "principalId": "guoale",
-                "activityOfferingId": classid,
+                "activityOfferingId": id,
                 "context.applicationId": "angular1x.student-registration",
                 "context.moduleId": "en",
                 "context.screenId": "student-registration.",
@@ -33,13 +35,10 @@ def scrape_class(classes, driver, wait):
                 data = API_response.json()  # Assuming the API returns JSON
                 for item in data:
                     grabbed_name = item.get("name")
-                    if course_name == "to be updated...":
-                        classes[i] = (grabbed_name, classid)
                     available_seats = int(item.get("available"))
                     print(f"Course: {grabbed_name}, Available Seats: {available_seats}")
                     if available_seats > 0:
-                        email_sender.send_email(available_seats, course_name)
-        return classes
+                        email_sender.send_email(available_seats, classname, instructors, schedules)
     except Exception:
         print("Error in API request.")
         return

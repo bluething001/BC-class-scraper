@@ -31,7 +31,13 @@ def loginer(username, password, driver, wait):
     )
     login_button.click()
 
-    # time.sleep(fast_random_sleep_time())
+
+    time.sleep(fast_random_sleep_time())
+
+    if not ("https://services.bc.edu/commoncore/myservices.do" in driver.current_url):
+        print("Invalid Login")
+        raise Exception("Invalid BC Login")
+
     wait.until(EC.url_contains("myservices.do"))
     final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
     driver.get(final_url)
