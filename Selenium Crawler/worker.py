@@ -40,11 +40,13 @@ class ScraperWorker(QObject):
     error = pyqtSignal(str)     # Signal to send error messages
     finished = pyqtSignal()     # Signal when the scraper finishes
 
-    def __init__(self, username, password, classes, parent=None):
+    def __init__(self, username, password, email, classes, emailsSent, parent=None):
         super().__init__(parent)
         self.username = username
         self.password = password
+        self.email = email
         self.classes = classes
+        self.emailsSent = emailsSent
         self.stop_thread = False
 
     # @pyqtSlot()
@@ -61,9 +63,11 @@ class ScraperWorker(QObject):
             options = webdriver.ChromeOptions()
             service = Service(chromeDriverPath)
             driver = webdriver.Chrome(service=service, options=options)
-            wait = WebDriverWait(driver, 30)
+            wait = WebDriverWait(driver, 10)
             iteration = 1
             while not self.stop_thread:
+                print()
+                print(f"iteration: {iteration}")
                 # Emit progress
                 self.progress.emit(f"BC Availbility Checker is currently running!")
                 # Replace this with your scraper logic
@@ -72,17 +76,26 @@ class ScraperWorker(QObject):
                     # self.progress.emit("Refreshing session...")
                     driver.quit()
                     driver = webdriver.Chrome(service=service, options=options)
-                    wait = WebDriverWait(driver, 30)
+                    wait = WebDriverWait(driver, 10)
                     try:
                         login.loginer(self.username, self.password, driver, wait)
                     except Exception as e:
-                        self.error.emit("Invalid BC Login")
+                        self.error.emit(str(e))
                         break
 
                 iteration += 1
-
-                api_requester.scrape_class(self.classes, driver)
-
+                try:
+                    api_requester.scrape_class(self.classes, self.emailsSent, self.email, driver)
+                except Exception:
+                    driver.quit()
+                    driver = webdriver.Chrome(service=service, options=options)
+                    wait = WebDriverWait(driver, 10)
+                    try:
+                        login.loginer(self.username, self.password, driver, wait)
+                    except Exception as e:
+                        self.error.emit(str(e))
+                        break
+                    
                 # Emit progress for scraping success
                 # self.progress.emit(f"Iteration #{iteration}: Scraping completed.")
 

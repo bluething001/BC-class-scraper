@@ -135,7 +135,7 @@ def get_all_info(username, password, className, section):
 
     # Set up Chrome options
     options = Options()
-    options.add_argument("--headless")  # Enable headless mode
+    # options.add_argument("--headless")  # Enable headless mode
     options.add_argument("--disable-gpu")  # Disable GPU (recommended for headless mode)
     options.add_argument("--no-sandbox")  # Bypass OS security model (useful in some environments)
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems in some containers

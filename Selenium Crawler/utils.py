@@ -10,6 +10,9 @@ def load_classes():
             return json.load(file)
     return []
 
+def init_emailsSent(classes):
+    return {class_entry[3]: False for class_entry in classes}
+
 def save_classes(classes):
     with open(CLASSES_FILE, "w") as file:
         json.dump(classes, file, indent=4)

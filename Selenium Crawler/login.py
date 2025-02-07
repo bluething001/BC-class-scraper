@@ -37,12 +37,16 @@ def loginer(username, password, driver, wait):
     if not ("https://services.bc.edu/commoncore/myservices.do" in driver.current_url):
         print("Invalid Login")
         raise Exception("Invalid BC Login")
-
-    wait.until(EC.url_contains("myservices.do"))
-    final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
-    driver.get(final_url)
+ 
+    try:
+        final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
+        driver.set_page_load_timeout(10)
+        driver.get(final_url)
+        time.sleep(slow_random_sleep_time())
+    except Exception:
+        print("Unable to reach registration page: Check connection to BC VPN/BC WIFI")
+        raise Exception("Unable to reach registration page: Check connection to BC VPN/BC WIFI")
     
-    time.sleep(slow_random_sleep_time())
     while True:
         try:
             tab_element = wait.until(

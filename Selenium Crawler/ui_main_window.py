@@ -11,7 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
-
+from PyQt5.QtGui import QFont
 
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QLabel, QVBoxLayout
@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 from worker import ClassAddWorker
-from utils import load_classes, save_classes, random_sleep_time
+from utils import load_classes, save_classes, random_sleep_time, init_emailsSent
 import api_requester
 
 class MainWindow(QWidget):
@@ -41,7 +41,8 @@ class MainWindow(QWidget):
         # Holds our classes in memory
         # Each item: (class_name, [instructors], [schedule], apiID)
         self.classes = load_classes()
-        
+        self.emailsSent = init_emailsSent(self.classes)
+        print(f"emailsSent right after init: {self.emailsSent}")
         # UI init
         self.initUI()
 
@@ -57,17 +58,22 @@ class MainWindow(QWidget):
         layout = QVBoxLayout()
 
         # Username
-        self.username_label = QLabel("Username:")
+        self.username_label = QLabel("BC Username:")
         self.username_entry = QLineEdit()
         layout.addWidget(self.username_label)
         layout.addWidget(self.username_entry)
 
         # Password
-        self.password_label = QLabel("Password:")
+        self.password_label = QLabel("BC Password:")
         self.password_entry = QLineEdit()
         self.password_entry.setEchoMode(QLineEdit.Password)
         layout.addWidget(self.password_label)
         layout.addWidget(self.password_entry)
+
+        self.email_label = QLabel("Notification Email:")
+        self.email_entry = QLineEdit()
+        layout.addWidget(self.email_label)
+        layout.addWidget(self.email_entry)
 
         # Class Name
         self.class_name_label = QLabel("Class Name:")
@@ -151,24 +157,43 @@ class MainWindow(QWidget):
         QMessageBox.critical(self, "Error Adding Class", error_msg)
 
     def show_overlay(self, message="Working..."):
+        """Show a semi-transparent overlay with a message."""
         if not hasattr(self, "overlay"):
             # Create overlay as a child widget
             self.overlay = QWidget(self)
             self.overlay.setStyleSheet("background-color: rgba(0, 0, 0, 128);")
-            self.overlay.setGeometry(self.rect())
+            self.overlay.setGeometry(self.rect())  # Make overlay cover the whole window
+
+            # Label for message
             self.overlay_label = QLabel(message, self.overlay)
-            self.overlay_label.setStyleSheet("color: white; font-size: 16px;")
-            # Center the label in the overlay
-            self.overlay_label.move(
-                (self.overlay.width() - self.overlay_label.width()) // 2,
-                (self.overlay.height() - self.overlay_label.height()) // 2
-            )
+            self.overlay_label.setStyleSheet("color: white;")
+            self.overlay_label.setAlignment(Qt.AlignCenter)
+
         else:
             # Just update text
             self.overlay_label.setText(message)
 
+        self.update_overlay()  # Call function to resize overlay and adjust font
         self.overlay.show()
-        self.overlay.raise_()  # bring to front
+        self.overlay.raise_()  # Bring to front
+
+    def update_overlay(self):
+        """Resize overlay and adjust font dynamically when the window resizes."""
+        if hasattr(self, "overlay"):
+            self.overlay.setGeometry(self.rect())  # Match overlay to window size
+
+            # Adjust font size based on window width
+            font_size = max(10, self.width() // 30 + 5)  # Scale font dynamically
+            font = QFont("Arial", font_size)
+            self.overlay_label.setFont(font)
+
+            # Ensure label is centered in overlay
+            self.overlay_label.setGeometry(self.overlay.rect())
+
+    def resizeEvent(self, event):
+        """Ensure overlay resizes dynamically when the window size changes."""
+        self.update_overlay()  # Adjust overlay size and font
+        super().resizeEvent(event)
 
     def hide_overlay(self):
         if hasattr(self, "overlay"):
@@ -177,6 +202,12 @@ class MainWindow(QWidget):
     def add_class(self):
         class_name = self.class_name_entry.text().strip()
         section_str = self.section_entry.text().strip()
+        username = self.username_entry.text().strip()
+        password = self.password_entry.text().strip()
+
+        if not username or not password:
+            QMessageBox.critical(self, "Error", "Please enter both your BC username and BC password.")
+            return
 
         if not class_name or not section_str:
             QMessageBox.critical(self, "Error", "Please enter both class name and section.")
@@ -187,9 +218,6 @@ class MainWindow(QWidget):
         except ValueError:
             QMessageBox.critical(self, "Error", "Section must be a number.")
             return
-
-        username = self.username_entry.text().strip()
-        password = self.password_entry.text().strip()
 
         # 1) Show an overlay or disable the UI
         self.show_overlay("Adding class...")  # you'll define show_overlay()
@@ -243,19 +271,22 @@ class MainWindow(QWidget):
         """Start the background scraping (Selenium) in a thread."""
         username = self.username_entry.text().strip()
         password = self.password_entry.text().strip()
+        email = self.email_entry.text().strip()
 
-        if not username or not password:
-            QMessageBox.critical(self, "Error", "Please enter both username and password.")
+        if not username or not password or not email:
+            QMessageBox.critical(self, "Error", "Please enter a BC username, BC password, and email for notifications")
             return
 
+        # print(self.emailsSent)
         # Disable UI elements
         self.username_entry.setEnabled(False)
         self.password_entry.setEnabled(False)
+        self.email_entry.setEnabled(False)
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
 
         self.scraper_thread = QThread()
-        self.scraper_worker = worker.ScraperWorker(username, password, self.classes)
+        self.scraper_worker = worker.ScraperWorker(username, password, email, self.classes, self.emailsSent)
 
         # Move the worker to the thread
         self.scraper_worker.moveToThread(self.scraper_thread)
@@ -283,15 +314,16 @@ class MainWindow(QWidget):
         if self.scraper_worker:
             print("scraper stopped?")
             self.scraper_stopped.emit()  # Emit the signal to stop the worker
+        self.emailsSent = init_emailsSent(self.classes)
         self.stop_button.setEnabled(False)
 
     def reenable_ui(self):
         self.username_entry.setEnabled(True)
         self.password_entry.setEnabled(True)
+        self.email_entry.setEnabled(True)
         self.start_button.setEnabled(True)
         self.add_class_button.setEnabled(True)
         self.stop_button.setEnabled(False)
-
 
         # The re-enabling of UI elements will happen 
         # once the thread actually finishes in run_scraper's finally block.
