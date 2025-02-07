@@ -120,10 +120,8 @@ def get_logs(driver, section, username):
 
                 # Look for the desired API endpoint
                 if "courseofferingservice/activityofferings" in request_url:
-                    print(f"requestURL: {request_url}")
+                    # print(f"requestURL: {request_url}")
                     courseOfferingId = extract_courseOffering_from_url(request_url).strip()
-                    print(courseOfferingId)
-                    print()
                     classinfo = get_info(driver, courseOfferingId, section, username)
                     return classinfo
                     # activity_ids.append(courseOfferingId)
@@ -135,7 +133,7 @@ def get_all_info(username, password, className, section):
 
     # Set up Chrome options
     options = Options()
-    # options.add_argument("--headless")  # Enable headless mode
+    options.add_argument("--headless")  # Enable headless mode
     options.add_argument("--disable-gpu")  # Disable GPU (recommended for headless mode)
     options.add_argument("--no-sandbox")  # Bypass OS security model (useful in some environments)
     options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems in some containers
@@ -177,6 +175,7 @@ def get_all_info(username, password, className, section):
         if not all_class_info:
             raise Exception(f"Invalid section '{section}' for class '{className}'. Please check the section number.")
 
+        driver.quit()
         return all_class_info
 
     except Exception as e:

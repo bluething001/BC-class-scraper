@@ -42,7 +42,7 @@ class MainWindow(QWidget):
         # Each item: (class_name, [instructors], [schedule], apiID)
         self.classes = load_classes()
         self.emailsSent = init_emailsSent(self.classes)
-        print(f"emailsSent right after init: {self.emailsSent}")
+        # print(f"emailsSent right after init: {self.emailsSent}")
         # UI init
         self.initUI()
 
@@ -137,6 +137,7 @@ class MainWindow(QWidget):
         self.hide_overlay()
 
         # 2) Update data
+        self.emailsSent[apiID] = False  
         self.classes.append((grabbed_name, instructors, schedule, apiID))
         save_classes(self.classes)
 
@@ -220,7 +221,7 @@ class MainWindow(QWidget):
             return
 
         # 1) Show an overlay or disable the UI
-        self.show_overlay("Adding class...")  # you'll define show_overlay()
+        self.show_overlay("Adding class...\nThis will take ~20s\n(depends on network connection)")  # you'll define show_overlay()
 
         # 2) Create a QThread and a worker object
         self.thread = QThread()  # keep a reference so it doesn't get GC'ed
@@ -251,7 +252,11 @@ class MainWindow(QWidget):
         item = selected_items[0]
         row = self.class_listwidget.row(item)
         self.class_listwidget.takeItem(row)  # remove from UI
+        api_id = self.classes[row][3]  # Extract the API ID
+        if api_id in self.emailsSent:
+            del self.emailsSent[api_id]
         self.classes.pop(row)                # remove from data
+
         save_classes(self.classes)
 
     def update_scraper_progress(self, message):
@@ -311,6 +316,7 @@ class MainWindow(QWidget):
         self.scraper_thread.start()
     def stop_scraper(self):
         """Signal the scraper thread to stop."""
+        save_classes(self.classes)
         if self.scraper_worker:
             print("scraper stopped?")
             self.scraper_stopped.emit()  # Emit the signal to stop the worker

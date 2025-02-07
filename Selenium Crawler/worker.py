@@ -61,6 +61,11 @@ class ScraperWorker(QObject):
             # Set up Selenium
             chromeDriverPath = os.environ.get("CHROMEDRIVER")
             options = webdriver.ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")  # Disable GPU (recommended for headless mode)
+            options.add_argument("--no-sandbox")  # Bypass OS security model (useful in some environments)
+            options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems in some containers
+            # options.set_capability("goog:loggingPrefs", {"performance": "ALL"})  # Enable performance logs
             service = Service(chromeDriverPath)
             driver = webdriver.Chrome(service=service, options=options)
             wait = WebDriverWait(driver, 10)
@@ -101,12 +106,12 @@ class ScraperWorker(QObject):
 
                 # Simulate scraping delay
                 stopped = False
-                for _ in range(10):
+                for _ in range(60):
                     QApplication.processEvents()
                     if self.stop_thread:
                         stopped = True
                         break
-                    time.sleep(0.1)
+                    time.sleep(1)
                 if stopped:
                     break
 

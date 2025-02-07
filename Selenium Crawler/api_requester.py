@@ -17,8 +17,6 @@ def scrape_class(classInfo, emailsSent, email, driver):
     # keyword_field.send_keys(Keys.RETURN)
     # time.sleep(2 + random_sleep_time())
     try:
-
-        print (emailsSent)
         for classname, instructors, schedules, id in classInfo:
             time.sleep(random_sleep_time())
             params = {
