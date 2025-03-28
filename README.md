@@ -1,7 +1,7 @@
 # BC Class Availibility Checker  
 Created a Selenium driver based web crawler that utilizes api requests to retrieve class availibility information and sends an email notification if there are seats available.  
 
-**How it's made:**  
+## How it's made:
 
 Selenium Chrome driver to automate login.  
 Http API requests to retrie JSONs of class data.  
