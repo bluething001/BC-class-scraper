@@ -4,7 +4,7 @@ Created a Selenium driver based web crawler that utilizes api requests to retrie
 ## How it's made:
 
 Selenium Chrome driver to automate login.  
-Http API requests to retrie JSONs of class data.  
+Http API requests to retrieve JSONs of class data.  
 Tinkered with multiple guis, including Tkinter, React Frontend with FastAPI backend and SQLite database (was unable to host the web application on a cloud server for technical reasons), and PyQt (Final GUI).  
 Implemented automated email notification with SMTP.  
 
