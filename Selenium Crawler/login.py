@@ -31,12 +31,49 @@ def loginer(username, password, driver, wait):
     )
     login_button.click()
 
-    # time.sleep(fast_random_sleep_time())
-    wait.until(EC.url_contains("myservices.do"))
-    final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
-    driver.get(final_url)
+
+    time.sleep(fast_random_sleep_time())
+
+    if not ("https://services.bc.edu/commoncore/myservices.do" in driver.current_url):
+        print("Invalid Login")
+        raise Exception("Invalid BC Login")
+ 
+    try:
+        final_url = "https://services.bc.edu/password/external/launcher/generic.do?id=eaPlanningRegistration"
+        driver.set_page_load_timeout(10)
+        driver.get(final_url)
+        time.sleep(slow_random_sleep_time())
+    except Exception:
+        print("Unable to reach registration page: Check connection to BC VPN/BC WIFI")
+        raise Exception("Unable to reach registration page: Check connection to BC VPN/BC WIFI")
     
-    time.sleep(slow_random_sleep_time())
+    # click select term
+    while True:
+        try:
+            select_term_button = wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "span.btn.btn-default.form-control.ui-select-toggle"))
+            )
+            select_term_button.click()
+            time.sleep(fast_random_sleep_time())  # Give it time to open
+            break
+        except Exception as e:
+            print(f"Could not click 'Select Term' button: {e}")
+            raise Exception("Could not click 'Select Term' button")
+
+    # click topmost term
+    while True:
+        try:
+            fall_2025_option = wait.until(
+                EC.element_to_be_clickable((By.ID, "ui-select-choices-row-0-0"))
+            )
+            fall_2025_option.click()
+            time.sleep(fast_random_sleep_time())
+            break
+        except Exception as e:
+            print(f"Could not click 'Fall 2025' option: {e}")
+            raise Exception("Could not click 'Fall 2025' option")
+    
+    # click My Schedule
     while True:
         try:
             tab_element = wait.until(
