@@ -13,6 +13,8 @@ import random
 from urllib.parse import urlparse, parse_qs
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException, StaleElementReferenceException
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService  # Changed
 
 CLASS_API_URL = "https://eaen.bc.edu/en-services/services/rest/oauth/activityseatcountservice/activityseatcounts"
 SCHEDULE_API_URL = "https://eaen.bc.edu/en-services/services/rest/oauth/schedulingservice/scheduledisplays"
@@ -129,20 +131,19 @@ def get_logs(driver, section, username):
             print("Error processing log:", e)
 
 def get_all_info(username, password, className, section):
-    chromeDriverPath = "/opt/homebrew/bin/chromedriver"
 
     # Set up Chrome options
     options = Options()
-    options.add_argument("--headless")  # Enable headless mode
-    options.add_argument("--disable-gpu")  # Disable GPU (recommended for headless mode)
-    options.add_argument("--no-sandbox")  # Bypass OS security model (useful in some environments)
-    options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems in some containers
+    # options.add_argument("--headless")  # Enable headless mode
+    # options.add_argument("--disable-gpu")  # Disable GPU (recommended for headless mode)
+    # options.add_argument("--no-sandbox")  # Bypass OS security model (useful in some environments)
+    # options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems in some containers
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})  # Enable performance logs
 
 
     # Service setup
-    service = Service(chromeDriverPath)
-    driver = webdriver.Chrome(service=service, options=options)
+    service = ChromeService(ChromeDriverManager().install())  # Changed
+    driver = webdriver.Chrome(service=service, options=options)  # Changed
 
     try:
         wait = WebDriverWait(driver, 30)

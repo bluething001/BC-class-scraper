@@ -47,6 +47,33 @@ def loginer(username, password, driver, wait):
         print("Unable to reach registration page: Check connection to BC VPN/BC WIFI")
         raise Exception("Unable to reach registration page: Check connection to BC VPN/BC WIFI")
     
+    # click select term
+    while True:
+        try:
+            select_term_button = wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "span.btn.btn-default.form-control.ui-select-toggle"))
+            )
+            select_term_button.click()
+            time.sleep(fast_random_sleep_time())  # Give it time to open
+            break
+        except Exception as e:
+            print(f"Could not click 'Select Term' button: {e}")
+            raise Exception("Could not click 'Select Term' button")
+
+    # click topmost term
+    while True:
+        try:
+            fall_2025_option = wait.until(
+                EC.element_to_be_clickable((By.ID, "ui-select-choices-row-0-0"))
+            )
+            fall_2025_option.click()
+            time.sleep(fast_random_sleep_time())
+            break
+        except Exception as e:
+            print(f"Could not click 'Fall 2025' option: {e}")
+            raise Exception("Could not click 'Fall 2025' option")
+    
+    # click My Schedule
     while True:
         try:
             tab_element = wait.until(

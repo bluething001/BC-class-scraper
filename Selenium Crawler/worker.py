@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as ChromeService  # Renamed
+from webdriver_manager.chrome import ChromeDriverManager  # Import
 from selenium.webdriver.support.ui import WebDriverWait
 import os
 import login
@@ -59,16 +60,16 @@ class ScraperWorker(QObject):
         """Run the scraping logic in this thread."""
         try:
             # Set up Selenium
-            chromeDriverPath = os.environ.get("CHROMEDRIVER")
             options = webdriver.ChromeOptions()
-            options.add_argument("--headless")
-            options.add_argument("--disable-gpu")  # Disable GPU (recommended for headless mode)
-            options.add_argument("--no-sandbox")  # Bypass OS security model (useful in some environments)
-            options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems in some containers
-            # options.set_capability("goog:loggingPrefs", {"performance": "ALL"})  # Enable performance logs
-            service = Service(chromeDriverPath)
+            # options.add_argument("--headless")
+            # options.add_argument("--disable-gpu")  # Disable GPU (recommended for headless mode)
+            # options.add_argument("--no-sandbox")  # Bypass OS security model (useful in some environments)
+            # options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems in some containers
+            options.set_capability("goog:loggingPrefs", {"performance": "ALL"})  # Enable performance logs
+            service = ChromeService(ChromeDriverManager().install())  # Use ChromeDriverManager
             driver = webdriver.Chrome(service=service, options=options)
             wait = WebDriverWait(driver, 10)
+            
             iteration = 1
             while not self.stop_thread:
                 print()
@@ -80,6 +81,7 @@ class ScraperWorker(QObject):
                 if iteration % 10 == 1:
                     # self.progress.emit("Refreshing session...")
                     driver.quit()
+                    service = ChromeService(ChromeDriverManager().install())  # New driver!
                     driver = webdriver.Chrome(service=service, options=options)
                     wait = WebDriverWait(driver, 10)
                     try:
@@ -118,5 +120,6 @@ class ScraperWorker(QObject):
         except Exception as e:
             self.error.emit(str(e))  # Emit error signal if something goes wrong
         finally:
-            driver.quit()
+            if driver:  # Ensure driver is quit even if initialization fails
+                driver.quit()
             self.finished.emit()  # Emit finished signal when done

@@ -27,10 +27,10 @@ class MainWindow(QWidget):
     scraper_stopped = pyqtSignal()
 
     def closeEvent(self, event):
-        if self.scraper_worker and self.scraper_thread.isRunning():
+        if hasattr(self, 'scraper_worker') and hasattr(self, 'scraper_thread') and self.scraper_thread.isRunning():
             self.stop_scraper()  # Emit stop signal
 
-        # Wait for the thread to finish before proceeding
+            # Wait for the thread to finish before proceeding
             self.scraper_thread.quit()
             self.scraper_thread.wait()  # Blocks until the thread fully exits
         event.accept()
@@ -42,8 +42,11 @@ class MainWindow(QWidget):
         # Each item: (class_name, [instructors], [schedule], apiID)
         self.classes = load_classes()
         self.emailsSent = init_emailsSent(self.classes)
+
         # print(f"emailsSent right after init: {self.emailsSent}")
         # UI init
+        self.scraper_thread = None
+        self.scraper_worker = None 
         self.initUI()
 
         # Thread handle if you want to do background scraping
